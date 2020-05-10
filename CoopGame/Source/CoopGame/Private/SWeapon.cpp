@@ -28,3 +28,7 @@ void ASWeapon::Tick(float DeltaTime)
 
 }
 
+void ASWeapon::Fire()
+{
+	// Trace
+}

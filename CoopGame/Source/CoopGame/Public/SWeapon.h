@@ -22,6 +22,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class USkeletalMeshComponent* MeshComp;
 
+	void Fire();
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
