@@ -6,6 +6,8 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/DamageType.h"
+#include "Particles/ParticleSystem.h"
+#include "Particles/ParticleSystemComponent.h"
 
 ASWeapon::ASWeapon()
 {
@@ -13,6 +15,8 @@ ASWeapon::ASWeapon()
 
 	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(FName("MeshComp"));
 	RootComponent = MeshComp;
+	MuzzleSocketName = "Bullet";
+	TracerTargetName = "Target";
 }
 
 // Called when the game starts or when spawned
@@ -45,12 +49,16 @@ void ASWeapon::Fire()
 		QueryParams.AddIgnoredActor(this);
 		QueryParams.bTraceComplex = true; // Trace Against Each Indivisual Triangle Of The Mesh, We're Hitting
 
+		// Particle Target Parameter
+		FVector TracerEndPoint = TraceEnd;
+
 		FHitResult Hit;
-		if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, ECollisionChannel::ECC_Visibility, QueryParams)) // From Pawn_BP->Camera->EyeHeight
+		if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, ECollisionChannel::ECC_Visibility, QueryParams)) // From Pawn_BP->Camera->EyeHeight/ Changed It
 		{
 			// Blocking Hit Process Damage
 			AActor* HitActor = Hit.GetActor();
 
+			// Applying Damage
 			UGameplayStatics::ApplyPointDamage(
 				HitActor,
 				20.f,
@@ -59,7 +67,31 @@ void ASWeapon::Fire()
 				MyOwner->GetInstigatorController(),
 				this,
 				DamageType);
+
+			// Overriding TracerEndPoint
+			TracerEndPoint = Hit.ImpactPoint;
+
+			if (ImpactEffect)
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+			}
 		}
-		DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::Magenta, false, 100.0f, 0, 1.0f);
+		DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::Magenta, false, 1.f, 0, 1.0f);
+
+		if (MuzzleEffect)
+		{
+			UGameplayStatics::SpawnEmitterAttached(MuzzleEffect, MeshComp, MuzzleSocketName);
+		}
+
+		if (TracerEffect)
+		{
+			FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
+
+			UParticleSystemComponent* TracerComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TracerEffect, MuzzleLocation);
+			if (TracerComp)
+			{
+				TracerComp->SetVectorParameter(TracerTargetName, TracerEndPoint);
+			}
+		}
 	}
 }
