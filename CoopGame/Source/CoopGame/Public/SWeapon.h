@@ -22,10 +22,13 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class USkeletalMeshComponent* MeshComp;
 
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void Fire();
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	TSubclassOf<class UDamageType> DamageType;
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
 };
