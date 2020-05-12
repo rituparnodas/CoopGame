@@ -25,11 +25,41 @@ protected:
 	void BeginCrouch();
 	void EndCrouch();
 
+	//======== ADS Setup ========
+	UFUNCTION(BlueprintCallable, Category = "Zoom")
+	void BeginZoom();
+
+	UFUNCTION(BlueprintCallable, Category = "Zoom")
+	void EndZoom();
+
+	bool bWantsToZoom;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Player")
+	float ZoomedFOV;
+
+	float DefaultFOV; // Set During BeginPlay
+
+	UPROPERTY(EditDefaultsOnly, Category = "Player", meta = (ClampMin = 0.1, ClampMax = 100))
+	float ZoomInterpSpeed;
+
+	//======== Swap TPP to FPP ========
+	UFUNCTION(BlueprintCallable, Category = "SwapCamera")
+	void SwapCamera();
+
+	class UCameraComponent* Select;
+
+	//======= Camera Setup =======
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	class UCameraComponent* CameraComp;
+	class UCameraComponent* TPPCameraComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class USpringArmComponent* SpringArmComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	class UCameraComponent* FPPCameraComp;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Socket")
+	FName HeadSocket;
 
 public:	
 	// Called every frame
@@ -39,4 +69,5 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual FVector GetPawnViewLocation() const override;
+	
 };

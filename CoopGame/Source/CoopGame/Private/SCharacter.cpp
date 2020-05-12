@@ -5,6 +5,7 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -16,10 +17,17 @@ ASCharacter::ASCharacter()
 	SpringArmComp->SetupAttachment(RootComponent);
 	SpringArmComp->bUsePawnControlRotation = true;
 
-	CameraComp = CreateDefaultSubobject<UCameraComponent>(FName("CameraComp"));
-	CameraComp->SetupAttachment(SpringArmComp);
+	TPPCameraComp = CreateDefaultSubobject<UCameraComponent>(FName("TPPCameraComp"));
+	TPPCameraComp->SetupAttachment(SpringArmComp);
 
 	GetMovementComponent()->GetNavAgentPropertiesRef().bCanCrouch = true;
+
+	FPPCameraComp = CreateDefaultSubobject<UCameraComponent>(FName("FPPCameraComp"));
+	HeadSocket = "head";
+	FPPCameraComp->AttachTo(ACharacter::GetMesh(), HeadSocket);
+	FPPCameraComp->bUsePawnControlRotation = true;
+
+	ZoomedFOV = 65.f;
 }
 
 // Called when the game starts or when spawned
@@ -27,6 +35,7 @@ void ASCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	DefaultFOV = TPPCameraComp->FieldOfView;
 }
 
 // Called every frame
@@ -34,6 +43,11 @@ void ASCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// (Condition ? A : B) if Condition is True Then A otherwise B
+	float TargetFOV = bWantsToZoom ? ZoomedFOV : DefaultFOV;
+	float NewFOV = FMath::FInterpTo(TPPCameraComp->FieldOfView, TargetFOV, DeltaTime, ZoomInterpSpeed);
+
+	TPPCameraComp->SetFieldOfView(NewFOV);
 }
 
 // Called to bind functionality to input
@@ -41,6 +55,7 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+	// Player Movement Function
 	PlayerInputComponent->BindAxis("MoveForward", this, &ASCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ASCharacter::MoveRight);
 
@@ -52,6 +67,10 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &ASCharacter::EndCrouch);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+
+	// ADS
+	PlayerInputComponent->BindAction("ADS", IE_Pressed, this, &ASCharacter::BeginZoom);
+	PlayerInputComponent->BindAction("ADS", IE_Released, this, &ASCharacter::EndZoom);
 }
 
 void ASCharacter::MoveForward(float Value)
@@ -77,12 +96,30 @@ void ASCharacter::EndCrouch()
 FVector ASCharacter::GetPawnViewLocation() const
 {
 	// We Don't Need Base Implementation So We Don't Need Super
-	if (CameraComp)
+	if (TPPCameraComp)
 	{
-		return CameraComp->GetComponentLocation();
+		return TPPCameraComp->GetComponentLocation();
 	}
 	else
 	{
 		return Super::GetPawnViewLocation(); // If SomeHow Fails Then Return The Original State
 	}
+}
+
+// Calling It From Blueprint
+void ASCharacter::SwapCamera()
+{
+	Select = TPPCameraComp;
+	TPPCameraComp = FPPCameraComp;
+	FPPCameraComp = Select;
+}
+
+void ASCharacter::BeginZoom()
+{
+	bWantsToZoom = true;
+}
+
+void ASCharacter::EndZoom()
+{
+	bWantsToZoom = false;
 }
