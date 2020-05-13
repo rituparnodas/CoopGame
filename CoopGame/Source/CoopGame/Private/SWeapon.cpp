@@ -10,6 +10,8 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "HAL/IConsoleManager.h"
 #include "Camera/CameraShake.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
+#include "CoopGame/CoopGame.h"
 
 static int32  DebugWeaponDrawing = 0;
 FAutoConsoleVariableRef CVARDebugWeaponDrawing(TEXT("COOP.DebugWeapons"), DebugWeaponDrawing, TEXT("Draw Debug Lines For Weapons"), ECVF_Cheat);
@@ -30,7 +32,7 @@ void ASWeapon::Fire()
 	{
 		FVector EyeLocation;
 		FRotator EyeRotation;
-		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation); // Changed Character
 
 		FVector ShotDirection = EyeRotation.Vector();
 		FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
@@ -39,12 +41,13 @@ void ASWeapon::Fire()
 		QueryParams.AddIgnoredActor(MyOwner);
 		QueryParams.AddIgnoredActor(this);
 		QueryParams.bTraceComplex = true; // Trace Against Each Indivisual Triangle Of The Mesh, We're Hitting
+		QueryParams.bReturnPhysicalMaterial = true;
 
 		// Particle Target Parameter
 		FVector TracerEndPoint = TraceEnd;
 
 		FHitResult Hit;
-		if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, ECollisionChannel::ECC_Visibility, QueryParams)) // From Pawn_BP->Camera->EyeHeight/ Changed It
+		if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams)) // From Pawn_BP->Camera->EyeHeight/ Changed It
 		{
 			// Blocking Hit Process Damage
 			AActor* HitActor = Hit.GetActor();
@@ -62,10 +65,26 @@ void ASWeapon::Fire()
 			// Overriding TracerEndPoint
 			TracerEndPoint = Hit.ImpactPoint;
 
-			if (ImpactEffect)
+			EPhysicalSurface SurfaceType =  UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get()); // Not A Direct Pointers Weak reference
+
+			UParticleSystem* SelectedEffect = nullptr;
+
+			switch (SurfaceType)
 			{
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+			case SURFACE_FLESHDEFAULT: // FleshDefault
+			case SURFACE_FLESHVULNERABLE:
+				SelectedEffect = FleshImpactEffect;
+				break;
+			default:
+				SelectedEffect = DefaultImpactEffect;
+				break;
 			}
+
+			if (SelectedEffect)
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+			}
+
 		}
 		if (DebugWeaponDrawing > 0)
 		{
