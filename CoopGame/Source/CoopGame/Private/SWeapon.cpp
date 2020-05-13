@@ -8,27 +8,18 @@
 #include "GameFramework/DamageType.h"
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "HAL/IConsoleManager.h"
+#include "Camera/CameraShake.h"
 
+static int32  DebugWeaponDrawing = 0;
+FAutoConsoleVariableRef CVARDebugWeaponDrawing(TEXT("COOP.DebugWeapons"), DebugWeaponDrawing, TEXT("Draw Debug Lines For Weapons"), ECVF_Cheat);
+	
 ASWeapon::ASWeapon()
 {
-	PrimaryActorTick.bCanEverTick = true;
-
 	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(FName("MeshComp"));
 	RootComponent = MeshComp;
 	MuzzleSocketName = "Bullet";
 	TracerTargetName = "Target";
-}
-
-// Called when the game starts or when spawned
-void ASWeapon::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
-// Called every frame
-void ASWeapon::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 }
 
 void ASWeapon::Fire()
@@ -76,22 +67,40 @@ void ASWeapon::Fire()
 				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 			}
 		}
-		DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::Magenta, false, 1.f, 0, 1.0f);
-
-		if (MuzzleEffect)
+		if (DebugWeaponDrawing > 0)
 		{
-			UGameplayStatics::SpawnEmitterAttached(MuzzleEffect, MeshComp, MuzzleSocketName);
+			DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::Magenta, false, 1.f, 0, 1.0f);
 		}
 
-		if (TracerEffect)
-		{
-			FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
+		PlayFireEffects(TracerEndPoint);
+	}
+}
 
-			UParticleSystemComponent* TracerComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TracerEffect, MuzzleLocation);
-			if (TracerComp)
-			{
-				TracerComp->SetVectorParameter(TracerTargetName, TracerEndPoint);
-			}
+void ASWeapon::PlayFireEffects(FVector TracerEndPoint)
+{
+	if (MuzzleEffect)
+	{
+		UGameplayStatics::SpawnEmitterAttached(MuzzleEffect, MeshComp, MuzzleSocketName);
+	}
+
+	if (TracerEffect)
+	{
+		FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
+
+		UParticleSystemComponent* TracerComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TracerEffect, MuzzleLocation);
+		if (TracerComp)
+		{
+			TracerComp->SetVectorParameter(TracerTargetName, TracerEndPoint);
+		}
+	}
+
+	APawn* MyOwner = Cast<APawn>(GetOwner());
+	if (MyOwner)
+	{
+		APlayerController* PlayerController = Cast<APlayerController>(MyOwner->GetController());
+		if (PlayerController)
+		{
+			PlayerController->ClientPlayCameraShake(FireCamShake);
 		}
 	}
 }

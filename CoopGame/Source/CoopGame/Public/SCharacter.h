@@ -61,6 +61,17 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Socket")
 	FName HeadSocket;
 
+	//======= Weapon Setup =======
+	class ASWeapon* CurrentWeapon;
+
+	void Fire();
+
+	UPROPERTY(EditDefaultsOnly, Category = "Player")
+	TSubclassOf<class ASWeapon> StarterWeaponClass;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = "Player")
+	FName WeaponAttachSocket;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

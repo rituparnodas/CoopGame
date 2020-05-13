@@ -6,11 +6,10 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "SWeapon.h"
 
-// Sets default values
 ASCharacter::ASCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(FName("SpringArmComp"));
@@ -24,21 +23,32 @@ ASCharacter::ASCharacter()
 
 	FPPCameraComp = CreateDefaultSubobject<UCameraComponent>(FName("FPPCameraComp"));
 	HeadSocket = "head";
-	FPPCameraComp->AttachTo(ACharacter::GetMesh(), HeadSocket);
+	FPPCameraComp->AttachTo(GetMesh(), HeadSocket);
 	FPPCameraComp->bUsePawnControlRotation = true;
 
 	ZoomedFOV = 65.f;
+	ZoomInterpSpeed = 16.f;
+
+	WeaponAttachSocket = "WeaponSocket";
 }
 
-// Called when the game starts or when spawned
 void ASCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
 	DefaultFOV = TPPCameraComp->FieldOfView;
+
+	// Spawn A Default Weapon
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	CurrentWeapon = GetWorld()->SpawnActor<ASWeapon>(StarterWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->SetOwner(this);
+		CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocket);
+	}
 }
 
-// Called every frame
 void ASCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -50,7 +60,6 @@ void ASCharacter::Tick(float DeltaTime)
 	TPPCameraComp->SetFieldOfView(NewFOV);
 }
 
-// Called to bind functionality to input
 void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -71,6 +80,8 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	// ADS
 	PlayerInputComponent->BindAction("ADS", IE_Pressed, this, &ASCharacter::BeginZoom);
 	PlayerInputComponent->BindAction("ADS", IE_Released, this, &ASCharacter::EndZoom);
+
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ASCharacter::Fire);
 }
 
 void ASCharacter::MoveForward(float Value)
@@ -122,4 +133,12 @@ void ASCharacter::BeginZoom()
 void ASCharacter::EndZoom()
 {
 	bWantsToZoom = false;
+}
+
+void ASCharacter::Fire()
+{
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->Fire();
+	}
 }
