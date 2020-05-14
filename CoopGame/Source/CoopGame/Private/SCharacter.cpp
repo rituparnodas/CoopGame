@@ -7,6 +7,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "SWeapon.h"
+#include "Components/CapsuleComponent.h"
+#include "CoopGame/CoopGame.h"
 
 ASCharacter::ASCharacter()
 {
@@ -25,6 +27,8 @@ ASCharacter::ASCharacter()
 	HeadSocket = "head";
 	FPPCameraComp->AttachTo(GetMesh(), HeadSocket);
 	FPPCameraComp->bUsePawnControlRotation = true;
+
+	GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Ignore);
 
 	ZoomedFOV = 65.f;
 	ZoomInterpSpeed = 16.f;
