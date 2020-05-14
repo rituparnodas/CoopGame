@@ -12,6 +12,7 @@
 #include "Camera/CameraShake.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "CoopGame/CoopGame.h"
+#include "TimerManager.h"
 
 static int32  DebugWeaponDrawing = 0;
 FAutoConsoleVariableRef CVARDebugWeaponDrawing(TEXT("COOP.DebugWeapons"), DebugWeaponDrawing, TEXT("Draw Debug Lines For Weapons"), ECVF_Cheat);
@@ -22,6 +23,15 @@ ASWeapon::ASWeapon()
 	RootComponent = MeshComp;
 	MuzzleSocketName = "Bullet";
 	TracerTargetName = "Target";
+	BaseDamage = 20.f;
+	RateOfFire = 600.;
+}
+
+void ASWeapon::BeginPlay()
+{
+	Super::BeginPlay();
+
+	TimeBetweenShots = 60 / RateOfFire;
 }
 
 void ASWeapon::Fire()
@@ -52,10 +62,18 @@ void ASWeapon::Fire()
 			// Blocking Hit Process Damage
 			AActor* HitActor = Hit.GetActor();
 
+			EPhysicalSurface SurfaceType =  UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get()); // Not A Direct Pointers Weak reference
+
+			float ActualDamage = BaseDamage;
+			if (SurfaceType == SURFACE_FLESHVULNERABLE)
+			{
+				ActualDamage *= 4.f;
+			}
+
 			// Applying Damage
 			UGameplayStatics::ApplyPointDamage(
 				HitActor,
-				20.f,
+				ActualDamage,
 				ShotDirection,
 				Hit,
 				MyOwner->GetInstigatorController(),
@@ -64,8 +82,6 @@ void ASWeapon::Fire()
 
 			// Overriding TracerEndPoint
 			TracerEndPoint = Hit.ImpactPoint;
-
-			EPhysicalSurface SurfaceType =  UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get()); // Not A Direct Pointers Weak reference
 
 			UParticleSystem* SelectedEffect = nullptr;
 
@@ -92,6 +108,7 @@ void ASWeapon::Fire()
 		}
 
 		PlayFireEffects(TracerEndPoint);
+		LastFireTime = GetWorld()->TimeSeconds;
 	}
 }
 
@@ -122,4 +139,15 @@ void ASWeapon::PlayFireEffects(FVector TracerEndPoint)
 			PlayerController->ClientPlayCameraShake(FireCamShake);
 		}
 	}
+}
+
+void ASWeapon::StartFire()
+{
+	float FirstDelay = FMath::Max((LastFireTime + TimeBetweenShots - GetWorld()->TimeSeconds), 0.f);
+	GetWorldTimerManager().SetTimer(TimerHandle_TimeBetweenShots, this, &ASWeapon::Fire, TimeBetweenShots, true, FirstDelay);
+}
+
+void ASWeapon::StopFire()
+{
+	GetWorldTimerManager().ClearTimer(TimerHandle_TimeBetweenShots);
 }

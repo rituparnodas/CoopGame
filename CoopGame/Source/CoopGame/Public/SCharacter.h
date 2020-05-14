@@ -64,7 +64,8 @@ protected:
 	//======= Weapon Setup =======
 	class ASWeapon* CurrentWeapon;
 
-	void Fire();
+	void StartFire();
+	void StopFire();
 
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
 	TSubclassOf<class ASWeapon> StarterWeaponClass;
@@ -80,5 +81,4 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual FVector GetPawnViewLocation() const override;
-	
 };
