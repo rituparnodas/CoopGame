@@ -9,6 +9,7 @@
 #include "SWeapon.h"
 #include "Components/CapsuleComponent.h"
 #include "CoopGame/CoopGame.h"
+#include "SHealthComponent.h"
 
 ASCharacter::ASCharacter()
 {
@@ -30,6 +31,8 @@ ASCharacter::ASCharacter()
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Ignore);
 
+	HealthComp = CreateDefaultSubobject<USHealthComponent>(FName("HealthComp"));
+
 	ZoomedFOV = 65.f;
 	ZoomInterpSpeed = 16.f;
 
@@ -50,6 +53,21 @@ void ASCharacter::BeginPlay()
 	{
 		CurrentWeapon->SetOwner(this);
 		CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttachSocket);
+	}
+
+	HealthComp->OnHealthChanged.AddDynamic(this, &ASCharacter::OnHealthChanged);
+}
+
+void ASCharacter::OnHealthChanged(USHealthComponent* HealthComponent, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+{
+	if (Health <= 0.f && !bDied) // If We Don't Use bDied Then The Function Will Keep Calling This
+	{
+		// Die
+		bDied = true;
+
+		GetMovementComponent()->StopMovementImmediately();
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		DetachFromControllerPendingDestroy(); SetLifeSpan(10.f);
 	}
 }
 
@@ -155,3 +173,4 @@ void ASCharacter::StopFire()
 		CurrentWeapon->StopFire();
 	}
 }
+

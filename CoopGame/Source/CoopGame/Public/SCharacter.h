@@ -73,6 +73,17 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, Category = "Player")
 	FName WeaponAttachSocket;
 
+	//======= Health Setup =======
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HealthComp")
+	class USHealthComponent* HealthComp;
+
+	UFUNCTION()
+	void OnHealthChanged(USHealthComponent* HealthComponent, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
+
+	// Pawn Died Previously 
+	UPROPERTY(BlueprintReadOnly, Category = "Player")
+	bool bDied;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
