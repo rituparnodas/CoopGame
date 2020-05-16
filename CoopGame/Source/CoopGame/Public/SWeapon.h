@@ -15,10 +15,13 @@ struct FHitScanTrace
 public:
 
 	UPROPERTY()
-	FVector_NetQuantize TraceFrom;
+	TEnumAsByte<EPhysicalSurface> SurfaceType;
 
 	UPROPERTY()
 	FVector_NetQuantize TraceTo;
+
+	UPROPERTY()
+	uint8 BurstCounter;
 };
 
 UCLASS()
@@ -81,6 +84,8 @@ protected:
 
 	// Derived From rate Of Fire
 	float TimeBetweenShots;
+
+	void PlayImpactEffects(EPhysicalSurface SurfaceType, FVector ImpactPoint);
 
 	//====== Multiplayer Setup ======
 
