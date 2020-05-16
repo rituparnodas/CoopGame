@@ -62,6 +62,7 @@ protected:
 	FName HeadSocket;
 
 	//======= Weapon Setup =======
+	UPROPERTY(Replicated)
 	class ASWeapon* CurrentWeapon;
 
 	void StartFire();

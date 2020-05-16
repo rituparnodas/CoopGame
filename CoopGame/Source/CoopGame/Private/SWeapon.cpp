@@ -13,6 +13,7 @@
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "CoopGame/CoopGame.h"
 #include "TimerManager.h"
+#include "Net/UnrealNetwork.h"
 
 static int32  DebugWeaponDrawing = 0;
 FAutoConsoleVariableRef CVARDebugWeaponDrawing(TEXT("COOP.DebugWeapons"), DebugWeaponDrawing, TEXT("Draw Debug Lines For Weapons"), ECVF_Cheat);
@@ -25,6 +26,8 @@ ASWeapon::ASWeapon()
 	TracerTargetName = "Target";
 	BaseDamage = 20.f;
 	RateOfFire = 600.;
+
+	SetReplicates(true);
 }
 
 void ASWeapon::BeginPlay()
@@ -37,6 +40,12 @@ void ASWeapon::BeginPlay()
 void ASWeapon::Fire()
 {
 	// Trace The World From Pawn Eyes To Crosshair Location
+	// Next Time You're Not Client You Server
+	if (GetLocalRole() < ROLE_Authority)
+	{
+		ServerFire();
+	}
+
 	AActor* MyOwner = GetOwner();
 	if (MyOwner)
 	{
@@ -108,6 +117,12 @@ void ASWeapon::Fire()
 		}
 
 		PlayFireEffects(TracerEndPoint);
+
+		if (GetLocalRole() == ROLE_Authority)
+		{
+			HitScanTrace.TraceTo = TracerEndPoint;
+		}
+
 		LastFireTime = GetWorld()->TimeSeconds;
 	}
 }
@@ -140,6 +155,26 @@ void ASWeapon::PlayFireEffects(FVector TracerEndPoint)
 		}
 	}
 }
+
+void ASWeapon::OnRep_HitScanTrace()
+{
+	// Play Cosmetic Effects
+	PlayFireEffects(HitScanTrace.TraceTo);
+}
+
+void ASWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(ASWeapon, HitScanTrace, COND_SkipOwner); // It Will Skip Sending The Owner Twice
+}
+
+void ASWeapon::ServerFire_Implementation()
+{
+	Fire();
+}
+
+bool ASWeapon::ServerFire_Validate() { return true; }
 
 void ASWeapon::StartFire()
 {

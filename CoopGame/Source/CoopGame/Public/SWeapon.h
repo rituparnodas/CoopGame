@@ -6,6 +6,21 @@
 #include "GameFramework/Actor.h"
 #include "SWeapon.generated.h"
 
+// Contains Information Of Single HitScan Weapon Interface
+USTRUCT()
+struct FHitScanTrace
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY()
+	FVector_NetQuantize TraceFrom;
+
+	UPROPERTY()
+	FVector_NetQuantize TraceTo;
+};
+
 UCLASS()
 class COOPGAME_API ASWeapon : public AActor
 {
@@ -66,4 +81,19 @@ protected:
 
 	// Derived From rate Of Fire
 	float TimeBetweenShots;
+
+	//====== Multiplayer Setup ======
+
+	/* Server = It Will Not Run On client But It Will Push A Request To The Server
+	 * Reliable = Guaranteed It Will Execure On Server
+	 * WithValidation = Required When Specified A Server
+	 */
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerFire();
+
+	UPROPERTY(ReplicatedUsing=OnRep_HitScanTrace)
+	FHitScanTrace HitScanTrace;
+
+	UFUNCTION()
+	void OnRep_HitScanTrace();
 };
