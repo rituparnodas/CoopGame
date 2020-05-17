@@ -8,13 +8,14 @@
 #include "Particles/ParticleSystem.h"
 #include "PhysicsEngine/RadialForceComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
 ASExplosiveBarrel::ASExplosiveBarrel()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
 	HealthComp = CreateDefaultSubobject<USHealthComponent>(FName("HealthComp"));
-	
+
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(FName("MeshComp"));
 	MeshComp->SetSimulatePhysics(true);
 	MeshComp->SetCollisionObjectType(ECC_PhysicsBody);
@@ -28,6 +29,9 @@ ASExplosiveBarrel::ASExplosiveBarrel()
 	RadialForceComp->bIgnoreOwningActor = true;
 
 	ExplosionImpulse = 400.f;
+
+	SetReplicates(true);
+	SetReplicateMovement(true); // If Not Set This Then The Following (MeshComp->AddImpulse && RadialForceComp->FireImpulse) Need To Move OnRep_Exploded 
 }
 
 void ASExplosiveBarrel::BeginPlay()
@@ -44,6 +48,7 @@ void ASExplosiveBarrel::OnHealthChanged(USHealthComponent* HealthComponent, floa
 	if (Health <= 0.f)
 	{
 		bExploded = true;
+		OnRep_Exploded(); // At The Moment bExploded Changes , OnRep_Exploded() Called
 
 		FVector BoostIntensity = FVector::UpVector * ExplosionImpulse;
 		MeshComp->AddImpulse(BoostIntensity, NAME_None, true);
@@ -56,8 +61,22 @@ void ASExplosiveBarrel::OnHealthChanged(USHealthComponent* HealthComponent, floa
 	}
 }
 
+// On Replicated Tell the server to change it's state on all clients
+void ASExplosiveBarrel::OnRep_Exploded()
+{
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
+
+	MeshComp->SetMaterial(0, ExplodedMaterial);
+}
+
 void ASExplosiveBarrel::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
 
+void ASExplosiveBarrel::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ASExplosiveBarrel, bExploded);
+}
