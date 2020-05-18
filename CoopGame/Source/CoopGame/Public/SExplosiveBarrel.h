@@ -22,7 +22,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	class USHealthComponent* HealthComp;
 
-	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components")
 	class UStaticMeshComponent* MeshComp;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
