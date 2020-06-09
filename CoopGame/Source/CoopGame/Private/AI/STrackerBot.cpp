@@ -8,6 +8,7 @@
 #include "NavigationPath.h"
 #include "GameFramework/Character.h"
 #include "DrawDebugHelpers.h"
+#include "SHealthComponent.h"
 
 ASTrackerBot::ASTrackerBot()
 {
@@ -17,6 +18,8 @@ ASTrackerBot::ASTrackerBot()
 	RootComponent = MeshComp;
 	MeshComp->SetCanEverAffectNavigation(false);
 	MeshComp->SetSimulatePhysics(true);
+
+	HealthComp = CreateDefaultSubobject<USHealthComponent>(FName("HealthComp"));
 
 	bUseVelocityChange = false;
 	MovementForce = 1000.f;
@@ -29,6 +32,8 @@ void ASTrackerBot::BeginPlay()
 
 	// Find Initial Move To
 	NextPathPoint = GetNextPathPoint();
+
+	HealthComp->OnHealthChanged.AddDynamic(this, &ASTrackerBot::HandleTakeDamage);
 }
 
 FVector ASTrackerBot::GetNextPathPoint()
@@ -68,7 +73,16 @@ void ASTrackerBot::Tick(float DeltaTime)
 
 		MeshComp->AddForce(ForceDirection, NAME_None, bUseVelocityChange);
 
-		DrawDebugDirectionalArrow(GetWorld(), GetActorLocation(), GetActorLocation() + ForceDirection, 32, FColor::Black, false, 0.f, 0, 1.f);
+		DrawDebugDirectionalArrow(GetWorld(), GetActorLocation(), GetActorLocation() + ForceDirection, 32, FColor::Blue, false, 0.f, 0, 1.f);
 	}
-	DrawDebugSphere(GetWorld(), NextPathPoint, 20, 12, FColor::Black, false, 0.f, 1.f);
+	DrawDebugSphere(GetWorld(), NextPathPoint, 20, 12, FColor::Blue, false, 0.f, 1.f);
+}
+
+void ASTrackerBot::HandleTakeDamage(USHealthComponent* HealthComponent, float Health, float HealthDelta,
+	const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+{
+	// TODO Explode When HitPoints == 0
+	// TODO Pulse The Material On Hit
+
+	UE_LOG(LogTemp, Warning, TEXT("Health : %s of %s"), *FString::SanitizeFloat(Health), *GetName())
 }

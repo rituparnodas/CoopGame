@@ -160,6 +160,7 @@ void ASWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetime
 	DOREPLIFETIME_CONDITION(ASWeapon, HitScanTrace, COND_SkipOwner); // It Will Skip Sending The Owner Twice
 }
 
+//RPC Function
 void ASWeapon::ServerFire_Implementation()
 {
 	Fire();

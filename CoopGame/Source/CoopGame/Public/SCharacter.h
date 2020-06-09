@@ -79,7 +79,8 @@ protected:
 	class USHealthComponent* HealthComp;
 
 	UFUNCTION()
-	void OnHealthChanged(USHealthComponent* HealthComponent, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
+	void OnHealthChanged(USHealthComponent* HealthComponent, float Health, float HealthDelta,
+		const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
 
 	// Pawn Died Previously 
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Player")
