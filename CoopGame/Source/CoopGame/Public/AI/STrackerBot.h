@@ -20,6 +20,9 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components")
+	class USphereComponent* SphereComp;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components")
 	class UStaticMeshComponent* MeshComp;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components")
@@ -43,7 +46,31 @@ protected:
 		void HandleTakeDamage(USHealthComponent* HealthComponent, float Health, float HealthDelta,
 			const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
 
+	// Dynamic Material To Pulse On Damage
+	UMaterialInstanceDynamic* MatInst;
+
+	void SelfDestruct();
+
+	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot")
+	class UParticleSystem* ExplosionEffect;
+
+	bool bExploded;
+
+	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot")
+	float ExplosionRadius;
+
+	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot")
+	float ExplosionDamage;
+
+	FTimerHandle TimerHandle_SelfDamage;
+
+	void DamageSelf();
+
+	bool bStartedSelfDestruction;
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	virtual void NotifyActorBeginOverlap(AActor* OtherActor);
 };
