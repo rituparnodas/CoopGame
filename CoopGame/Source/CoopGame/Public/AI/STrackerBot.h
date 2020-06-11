@@ -49,6 +49,7 @@ protected:
 	// Dynamic Material To Pulse On Damage
 	UMaterialInstanceDynamic* MatInst;
 
+	//======Destruct Setting======
 	void SelfDestruct();
 
 	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot")
@@ -67,6 +68,16 @@ protected:
 	void DamageSelf();
 
 	bool bStartedSelfDestruction;
+
+	//======Sound Effect======
+	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot")
+	class USoundCue* SelfDestructSound;
+
+	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot")
+	class USoundCue* ExplodeSound;
+
+	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot")
+	float SelfDamageInterval;
 
 public:
 	// Called every frame

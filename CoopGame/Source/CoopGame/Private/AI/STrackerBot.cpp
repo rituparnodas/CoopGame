@@ -13,6 +13,7 @@
 #include "SHealthComponent.h"
 #include "SCharacter.h"
 #include "TimerManager.h"
+#include "Sound/SoundCue.h"
 
 ASTrackerBot::ASTrackerBot()
 {
@@ -39,6 +40,8 @@ ASTrackerBot::ASTrackerBot()
 	bExploded = false;
 	ExplosionRadius = 200.f;
 	ExplosionDamage = 40.f;
+
+	SelfDamageInterval = 0.25f;
 }
 
 void ASTrackerBot::BeginPlay()
@@ -76,13 +79,24 @@ void ASTrackerBot::SelfDestruct()
 	
 	TArray<AActor*> IgnoredActors;
 	IgnoredActors.Add(this);
-	UGameplayStatics::ApplyRadialDamage(this, ExplosionDamage, GetActorLocation(), ExplosionRadius,
-		nullptr, IgnoredActors, this, GetInstigatorController(), true);
+
+	UGameplayStatics::ApplyRadialDamage(
+		this, 
+		ExplosionDamage, 
+		GetActorLocation(), 
+		ExplosionRadius,
+		nullptr, 
+		IgnoredActors, 
+		this, 
+		GetInstigatorController(), 
+		true);
 
 	DrawDebugSphere(GetWorld(), GetActorLocation(), ExplosionRadius, 20, FColor::Purple, false, 9.f, 5.f);
 
 	Destroy();
 	bExploded = true;
+
+	UGameplayStatics::PlaySoundAtLocation(this, ExplodeSound, GetActorLocation());
 }
 
 void ASTrackerBot::Tick(float DeltaTime)
@@ -113,9 +127,6 @@ void ASTrackerBot::Tick(float DeltaTime)
 void ASTrackerBot::HandleTakeDamage(USHealthComponent* HealthComponent, float Health, float HealthDelta,
 	const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
-	// TODO Explode When HitPoints == 0
-	// TODO Pulse The Material On Hit
-
 	if (MatInst == nullptr)
 	{
 		MatInst = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0, MeshComp->GetMaterial(0));
@@ -139,9 +150,11 @@ void ASTrackerBot::NotifyActorBeginOverlap(AActor* OtherActor)
 	ASCharacter* PlayerPawn = Cast<ASCharacter>(OtherActor);
 	if (PlayerPawn && !bStartedSelfDestruction)
 	{
-		GetWorldTimerManager().SetTimer(TimerHandle_SelfDamage, this, &ASTrackerBot::DamageSelf, 0.5f, true, 0.f);
+		GetWorldTimerManager().SetTimer(TimerHandle_SelfDamage, this, &ASTrackerBot::DamageSelf, SelfDamageInterval, true, 0.f);
 
 		bStartedSelfDestruction = true;
+
+		UGameplayStatics::SpawnSoundAttached(SelfDestructSound, RootComponent);
 	}
 }
 
