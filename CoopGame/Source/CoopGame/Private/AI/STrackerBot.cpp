@@ -48,8 +48,11 @@ void ASTrackerBot::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Find Initial Move To
-	NextPathPoint = GetNextPathPoint();
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		// Find Initial Move To
+		NextPathPoint = GetNextPathPoint();
+	}
 
 	HealthComp->OnHealthChanged.AddDynamic(this, &ASTrackerBot::HandleTakeDamage);
 }
@@ -103,25 +106,28 @@ void ASTrackerBot::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	float DistanceToTarget = (GetActorLocation() - NextPathPoint).Size();
-	if (DistanceToTarget <= RequiredDistanceToTarget)
+	if (GetLocalRole() == ROLE_Authority)
 	{
-		NextPathPoint = GetNextPathPoint();
+		float DistanceToTarget = (GetActorLocation() - NextPathPoint).Size();
+		if (DistanceToTarget <= RequiredDistanceToTarget)
+		{
+			NextPathPoint = GetNextPathPoint();
 
-		DrawDebugString(GetWorld(), GetActorLocation(), "Target Reached");
+			DrawDebugString(GetWorld(), GetActorLocation(), "Target Reached");
+		}
+		else
+		{
+			//Keep Moving Towards Next Target
+			FVector ForceDirection = NextPathPoint - GetActorLocation();
+			ForceDirection.Normalize();
+			ForceDirection *= MovementForce;
+
+			MeshComp->AddForce(ForceDirection, NAME_None, bUseVelocityChange);
+
+			DrawDebugDirectionalArrow(GetWorld(), GetActorLocation(), GetActorLocation() + ForceDirection, 32, FColor::Blue, false, 0.f, 0, 1.f);
+		}
+		DrawDebugSphere(GetWorld(), NextPathPoint, 20, 12, FColor::Blue, false, 0.f, 1.f);
 	}
-	else
-	{
-		//Keep Moving Towards Next Target
-		FVector ForceDirection = NextPathPoint - GetActorLocation();
-		ForceDirection.Normalize();
-		ForceDirection *= MovementForce;
-
-		MeshComp->AddForce(ForceDirection, NAME_None, bUseVelocityChange);
-
-		DrawDebugDirectionalArrow(GetWorld(), GetActorLocation(), GetActorLocation() + ForceDirection, 32, FColor::Blue, false, 0.f, 0, 1.f);
-	}
-	DrawDebugSphere(GetWorld(), NextPathPoint, 20, 12, FColor::Blue, false, 0.f, 1.f);
 }
 
 void ASTrackerBot::HandleTakeDamage(USHealthComponent* HealthComponent, float Health, float HealthDelta,
