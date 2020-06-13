@@ -79,9 +79,13 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot")
 	float SelfDamageInterval;
 
+	int32 PowerLevel;
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	void OnCheckNearbyBots();
 
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor);
 };

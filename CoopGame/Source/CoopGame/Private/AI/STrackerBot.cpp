@@ -54,7 +54,11 @@ void ASTrackerBot::BeginPlay()
 		NextPathPoint = GetNextPathPoint();
 	}
 
-	HealthComp->OnHealthChanged.AddDynamic(this, &ASTrackerBot::HandleTakeDamage);
+	HealthComp->OnHealthChanged.AddDynamic(this, &ASTrackerBot::HandleTakeDamage); // OnHealthChanged Is OnRep_HealthChanged() 
+																				   //So This Will Work in Client And Server
+
+	FTimerHandle TimerHandle_CheckPowerLevel;
+	GetWorldTimerManager().SetTimer(TimerHandle_CheckPowerLevel, this, &ASTrackerBot::OnCheckNearbyBots, 1.f, true);
 }
 
 FVector ASTrackerBot::GetNextPathPoint()
@@ -63,8 +67,8 @@ FVector ASTrackerBot::GetNextPathPoint()
 	ACharacter* PlayerPawn = UGameplayStatics::GetPlayerCharacter(this, 0);
 
 	UNavigationPath* NavPath =  UNavigationSystemV1::FindPathToActorSynchronously(this, GetActorLocation(), PlayerPawn);
-	if(!NavPath) return GetActorLocation();
-	if (NavPath->PathPoints.Num() > 1)
+	
+	if (NavPath && NavPath->PathPoints.Num() > 1)
 	{
 		return NavPath->PathPoints[1]; // Return Next Point In The Path
 	}
@@ -74,6 +78,7 @@ FVector ASTrackerBot::GetNextPathPoint()
 	}
 }
 
+// This Is Working For Both Server And Client
 void ASTrackerBot::SelfDestruct()
 {
 	if (bExploded) return;
@@ -92,9 +97,12 @@ void ASTrackerBot::SelfDestruct()
 		TArray<AActor*> IgnoredActors;
 		IgnoredActors.Add(this);
 
+		// Increase damage Based On The Power Level (Challenge Code)
+		float ActualDamage = ExplosionDamage + (ExplosionDamage * PowerLevel);
+
 		UGameplayStatics::ApplyRadialDamage(
 			this,
-			ExplosionDamage,
+			ActualDamage,
 			GetActorLocation(),
 			ExplosionRadius,
 			nullptr,
@@ -103,9 +111,8 @@ void ASTrackerBot::SelfDestruct()
 			GetInstigatorController(),
 			true);
 
-		DrawDebugSphere(GetWorld(), GetActorLocation(), ExplosionRadius, 20, FColor::Purple, false, 9.f, 5.f);
-
 		SetLifeSpan(2.f);
+		DrawDebugSphere(GetWorld(), GetActorLocation(), ExplosionRadius, 20, FColor::Purple, false, 1.f, 1.f);
 	}
 }
 
@@ -137,6 +144,60 @@ void ASTrackerBot::Tick(float DeltaTime)
 	}
 }
 
+void ASTrackerBot::OnCheckNearbyBots()
+{
+	// distance To Check Nearby Bots
+	const float Radius = 600;
+
+	// create Temporary Collision Shape For Overlaps
+	FCollisionShape CollShape;
+	CollShape.SetSphere(Radius);
+
+	// only Find Pawns (Player And AI Bots)
+	FCollisionObjectQueryParams QueryParams;
+
+	// Our TrackerBot's Mesh Comp is Set To Physics Body In Blueprint(Default)
+	QueryParams.AddObjectTypesToQuery(ECC_PhysicsBody);
+	QueryParams.AddObjectTypesToQuery(ECC_Pawn);
+
+	TArray<FOverlapResult> Overlaps;
+	GetWorld()->OverlapMultiByObjectType(Overlaps, GetActorLocation(), FQuat::Identity, QueryParams, CollShape);
+
+	DrawDebugSphere(GetWorld(), GetActorLocation(), Radius, 12, FColor::Red, false, 2.f);
+
+	int32 NrOfBots = 0;
+
+	// Loop Over the Result Using A Range Based For Loop
+	for (FOverlapResult Result : Overlaps)
+	{
+		ASTrackerBot* Bot = Cast<ASTrackerBot>(Result.GetActor());
+
+		if (Bot && Bot != this)
+		{
+			NrOfBots++;
+		}
+	}
+
+	const int32 MaxPowerLevel = 4;
+
+	// Clamp Between Min = 0 And Max = 4
+	PowerLevel = FMath::Clamp(NrOfBots, 0, MaxPowerLevel);
+	
+	// Update The Material Color
+	if (MatInst == nullptr)
+	{
+		MatInst = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0, MeshComp->GetMaterial(0));
+	}
+	if (MatInst)
+	{
+		float Alpha = PowerLevel / (float)MaxPowerLevel;
+
+		MatInst->SetScalarParameterValue("PowerLevelAlpha", Alpha);
+	}
+	DrawDebugString(GetWorld(), FVector(0,0,0), FString::FromInt(PowerLevel),this, FColor::White, 1.f, true);
+}
+
+// This Is Working For Both Server And Client
 void ASTrackerBot::HandleTakeDamage(USHealthComponent* HealthComponent, float Health, float HealthDelta,
 	const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
