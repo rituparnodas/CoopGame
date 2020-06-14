@@ -87,5 +87,5 @@ public:
 
 	void OnCheckNearbyBots();
 
-	virtual void NotifyActorBeginOverlap(AActor* OtherActor);
+	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 };

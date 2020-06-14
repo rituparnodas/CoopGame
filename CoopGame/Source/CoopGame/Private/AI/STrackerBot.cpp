@@ -156,7 +156,7 @@ void ASTrackerBot::OnCheckNearbyBots()
 	// only Find Pawns (Player And AI Bots)
 	FCollisionObjectQueryParams QueryParams;
 
-	// Our TrackerBot's Mesh Comp is Set To Physics Body In Blueprint(Default)
+	// Our TrackerBot's  Mesh Comp is Set To Physics Body In Blueprint(Default)
 	QueryParams.AddObjectTypesToQuery(ECC_PhysicsBody);
 	QueryParams.AddObjectTypesToQuery(ECC_Pawn);
 
@@ -221,6 +221,8 @@ void ASTrackerBot::HandleTakeDamage(USHealthComponent* HealthComponent, float He
 
 void ASTrackerBot::NotifyActorBeginOverlap(AActor* OtherActor)
 {
+	Super::NotifyActorBeginOverlap(OtherActor);
+
 	ASCharacter* PlayerPawn = Cast<ASCharacter>(OtherActor);
 	if (PlayerPawn && !bStartedSelfDestruction)
 	{
