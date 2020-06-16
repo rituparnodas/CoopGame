@@ -19,7 +19,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class USHealthComponent* HealthComp;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components")
@@ -43,7 +43,7 @@ protected:
 	UFUNCTION()
 	void OnRep_Exploded();
 
-	UPROPERTY(ReplicatedUsing=OnRep_Exploded)
+	UPROPERTY(ReplicatedUsing=OnRep_Exploded, BlueprintReadOnly)
 	bool bExploded;
 
 public:
