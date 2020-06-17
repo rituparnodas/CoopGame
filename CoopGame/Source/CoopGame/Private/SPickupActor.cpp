@@ -19,14 +19,19 @@ ASPickupActor::ASPickupActor()
 	DecalComp->SetupAttachment(RootComponent);
 	DecalComp->SetRelativeRotation(FRotator(90.f, 0.f, 0.f));
 	DecalComp->DecalSize.Set(64, 75, 75);
+
+	SetReplicates(true);
 }
 
 // Called when the game starts or when spawned
 void ASPickupActor::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	Respawn();
+
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		Respawn();
+	}
 }
 
 void ASPickupActor::Respawn()
@@ -46,12 +51,15 @@ void ASPickupActor::NotifyActorBeginOverlap(AActor* OtherActor)
 {
 	Super::NotifyActorBeginOverlap(OtherActor);
 
-	ASCharacter* PlayerPawn = Cast<ASCharacter>(OtherActor);
-	if (PlayerPawn && PowerUpInstance)
+	if (GetLocalRole() == ROLE_Authority)
 	{
-		PowerUpInstance->ActivatePowerup();
-		PowerUpInstance = nullptr;
+		ASCharacter* PlayerPawn = Cast<ASCharacter>(OtherActor);
+		if (PlayerPawn && PowerUpInstance)
+		{
+			PowerUpInstance->ActivatePowerup();
+			PowerUpInstance = nullptr;
 
-		GetWorldTimerManager().SetTimer(TimerHandle_RespawnTimer, this, &ASPickupActor::Respawn, CooldownDuration, false);
+			GetWorldTimerManager().SetTimer(TimerHandle_RespawnTimer, this, &ASPickupActor::Respawn, CooldownDuration, false);
+		}
 	}
 }
