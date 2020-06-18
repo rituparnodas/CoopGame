@@ -54,5 +54,7 @@ public:
 	void OnExpired();
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Powerups")
-	void OnPowerupTicked();
+	void OnPowerupTicked(AActor* ActivateFor);
+
+	class AActor* LetsActivateFor;
 };

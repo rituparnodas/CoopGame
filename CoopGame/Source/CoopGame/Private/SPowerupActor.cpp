@@ -19,7 +19,7 @@ void ASPowerupActor::OnTickPowerup()
 {
 	TickProcessed++;
 
-	OnPowerupTicked(); // BlueprintCallable
+	OnPowerupTicked(LetsActivateFor); // BlueprintCallable
 
 	if (TickProcessed >= TotalNrOfTicks)
 	{
@@ -44,6 +44,8 @@ void ASPowerupActor::ActivatePowerup(AActor* ActivateFor)
 
 	bIsPowerupActive = true;
 	OnRep_PowerupActive(); // Because Its Not Automatically Call On Server So We Need To Manually Control It
+
+	LetsActivateFor = ActivateFor;
 
 	if (PowerupInterval > 0.f)
 	{
