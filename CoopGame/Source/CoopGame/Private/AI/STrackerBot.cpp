@@ -100,6 +100,7 @@ void ASTrackerBot::SelfDestruct()
 		// Increase damage Based On The Power Level (Challenge Code)
 		float ActualDamage = ExplosionDamage + (ExplosionDamage * PowerLevel);
 
+		// This Working On Client Because Here is ["this"] inside Code And Which Is Replicated
 		UGameplayStatics::ApplyRadialDamage(
 			this,
 			ActualDamage,

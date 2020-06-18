@@ -19,7 +19,7 @@ void ASPowerupActor::OnTickPowerup()
 {
 	TickProcessed++;
 
-	OnPowerupTicked();
+	OnPowerupTicked(); // BlueprintCallable
 
 	if (TickProcessed >= TotalNrOfTicks)
 	{
@@ -35,12 +35,12 @@ void ASPowerupActor::OnTickPowerup()
 
 void ASPowerupActor::OnRep_PowerupActive()
 {
-	OnPowerupStateChanged(bIsPowerupActive);
+	OnPowerupStateChanged(bIsPowerupActive); // BlueprintCallable (Base Only)
 }
 
-void ASPowerupActor::ActivatePowerup()
+void ASPowerupActor::ActivatePowerup(AActor* ActivateFor)
 {
-	OnActivated();
+	OnActivated(ActivateFor); // BlueprintCallable
 
 	bIsPowerupActive = true;
 	OnRep_PowerupActive(); // Because Its Not Automatically Call On Server So We Need To Manually Control It

@@ -101,4 +101,7 @@ protected:
 
 	UFUNCTION()
 	void OnRep_HitScanTrace();
+
+	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot")
+	class USoundCue* FireSound;
 };

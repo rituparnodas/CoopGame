@@ -14,6 +14,7 @@
 #include "CoopGame/CoopGame.h"
 #include "TimerManager.h"
 #include "Net/UnrealNetwork.h"
+#include "Sound/SoundCue.h"
 
 static int32  DebugWeaponDrawing = 0;
 FAutoConsoleVariableRef CVARDebugWeaponDrawing(TEXT("COOP.DebugWeapons"), DebugWeaponDrawing, TEXT("Draw Debug Lines For Weapons"), ECVF_Cheat);
@@ -48,6 +49,8 @@ void ASWeapon::Fire()
 	{
 		ServerFire();
 	}
+
+	UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
 
 	AActor* MyOwner = GetOwner();
 	if (MyOwner)

@@ -56,7 +56,7 @@ void ASPickupActor::NotifyActorBeginOverlap(AActor* OtherActor)
 		ASCharacter* PlayerPawn = Cast<ASCharacter>(OtherActor);
 		if (PlayerPawn && PowerUpInstance)
 		{
-			PowerUpInstance->ActivatePowerup();
+			PowerUpInstance->ActivatePowerup(OtherActor);
 			PowerUpInstance = nullptr;
 
 			GetWorldTimerManager().SetTimer(TimerHandle_RespawnTimer, this, &ASPickupActor::Respawn, CooldownDuration, false);
