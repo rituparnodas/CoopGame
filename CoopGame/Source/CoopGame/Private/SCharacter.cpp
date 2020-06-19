@@ -39,6 +39,8 @@ ASCharacter::ASCharacter()
 	ZoomInterpSpeed = 16.f;
 
 	WeaponAttachSocket = "WeaponSocket";
+
+	bADS = false;
 }
 
 void ASCharacter::BeginPlay()
@@ -155,12 +157,42 @@ void ASCharacter::SwapCamera()
 void ASCharacter::BeginZoom()
 {
 	bWantsToZoom = true;
+
+	if (GetLocalRole() < ROLE_Authority )
+	{
+		ServerADSOn();
+		
+	}
+
+	bADS = true;
+	
 }
 
 void ASCharacter::EndZoom()
 {
 	bWantsToZoom = false;
+
+	if (GetLocalRole() < ROLE_Authority)
+	{
+		ServerADSOff();
+		
+	}
+
+	bADS = false;
 }
+
+void ASCharacter::ServerADSOn_Implementation()
+{
+	BeginZoom();
+}
+
+void ASCharacter::ServerADSOff_Implementation()
+{
+	EndZoom();
+}
+
+bool ASCharacter::ServerADSOn_Validate() { return true; }
+bool ASCharacter::ServerADSOff_Validate() { return true; }
 
 void ASCharacter::StartFire()
 {
@@ -184,4 +216,5 @@ void ASCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifet
 
 	DOREPLIFETIME(ASCharacter, CurrentWeapon);
 	DOREPLIFETIME(ASCharacter, bDied);
+	DOREPLIFETIME(ASCharacter, bADS);
 }

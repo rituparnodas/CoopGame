@@ -86,6 +86,15 @@ protected:
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Player")
 	bool bDied;
 
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Player")
+	bool bADS;
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerADSOn();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerADSOff();
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
