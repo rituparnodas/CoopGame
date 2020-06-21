@@ -16,6 +16,8 @@ enum class EWaveState : uint8
 	// Waiting For Players To Kill Remaining Bots
 	WaitingToComplete,
 
+	WaveComplete,
+
 	GameOver,
 };
 
@@ -31,6 +33,7 @@ public:
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_WaveState, Category = "GameState")
 	EWaveState WaveState;
 
+	void SetWaveState(EWaveState NewState);
 
 protected:
 	
