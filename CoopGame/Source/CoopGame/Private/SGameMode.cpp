@@ -3,10 +3,13 @@
 #include "SGameMode.h"
 #include "TimerManager.h"
 #include "SHealthComponent.h"
+#include "SGameState.h"
 
 ASGameMode::ASGameMode()
 {
 	TimeBetweenWaves = 2.f;
+
+	GameStateClass = ASGameState::StaticClass();
 
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.TickInterval = 1.f;
@@ -108,4 +111,13 @@ void ASGameMode::GameOver()
 
 	// TODO Finish up The Match, Present "GameOver" To Player
 	UE_LOG(LogTemp, Warning, TEXT("game Over*********Player Died"))
+}
+
+void ASGameMode::SetWaveState(EWaveState NewState)
+{
+	ASGameState* GS = GetGameState<ASGameState>();
+	if (ensureAlways(GameState))
+	{
+		GS->WaveState = NewState;
+	}
 }
