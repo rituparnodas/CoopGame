@@ -24,6 +24,7 @@ void ASGameMode::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	CheckWaveState();
+	CheckAnyPlayerAlive();
 }
 
 void ASGameMode::CheckWaveState()
@@ -37,10 +38,7 @@ void ASGameMode::CheckWaveState()
 	for (FConstPawnIterator It = GetWorld()->GetPawnIterator(); It; ++It)
 	{
 		APawn* TestPawn = It->Get();
-		if (TestPawn == nullptr || TestPawn->IsPlayerControlled())
-		{
-			continue;
-		}
+		if (TestPawn == nullptr || TestPawn->IsPlayerControlled()) continue;
 
 		USHealthComponent* HealthComp = Cast<USHealthComponent>(TestPawn->GetComponentByClass(USHealthComponent::StaticClass()));
 		if (HealthComp && HealthComp->GetHealth() > 0)
@@ -50,9 +48,28 @@ void ASGameMode::CheckWaveState()
 		}
 	}
 	if (!bIsAnyBotAlive)
-	{
-		PrepareForNextWave();
+	{ 
+		PrepareForNextWave(); 
 	}
+}
+
+void ASGameMode::CheckAnyPlayerAlive()
+{
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		APlayerController* PC = It->Get();
+		if (PC && PC->GetPawn())
+		{
+			APawn* MyPawn = PC->GetPawn();
+			USHealthComponent* HealthComp = Cast<USHealthComponent>(MyPawn->GetComponentByClass(USHealthComponent::StaticClass()));
+			
+			// A Player Is Still Alive
+			if (ensure(HealthComp) && HealthComp->GetHealth() > 0.f) return;
+		}
+	}
+
+	// No Player Alive
+	GameOver();
 }
 
 void ASGameMode::PrepareForNextWave()
@@ -83,4 +100,12 @@ void ASGameMode::SpawnBotTimerElapsed()
 void ASGameMode::EndWave()
 {
 	GetWorldTimerManager().ClearTimer(TimerHandle_BotSpawner);
+}
+
+void ASGameMode::GameOver()
+{
+	EndWave();
+
+	// TODO Finish up The Match, Present "GameOver" To Player
+	UE_LOG(LogTemp, Warning, TEXT("game Over*********Player Died"))
 }
