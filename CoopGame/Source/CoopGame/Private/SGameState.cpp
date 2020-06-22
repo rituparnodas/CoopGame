@@ -14,7 +14,7 @@ void ASGameState::SetWaveState(EWaveState NewState)
 	{
 		EWaveState OldState = WaveState;
 		WaveState = NewState;
-		OnRep_WaveState(OldState); // Call On Server
+		OnRep_WaveState(OldState); // Call On Server // Read The Previous Codes
 	}
 }
 

@@ -40,4 +40,6 @@ protected:
 
 	UFUNCTION()
 	void OnRep_Health(float OldHealth); // You Can Have Previous Value Of The Replicating Parameter
+
+	bool bIsDead;
 };
