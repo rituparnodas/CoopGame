@@ -9,6 +9,7 @@
 enum class EWaveState : uint8;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnActorKilled, AActor*, VictimActor, AActor*, KillerActor, AController*, KillerController); // Killed Actor, Killer Actor
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRespawn);
 
 /**
  * 
@@ -66,4 +67,7 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "GameMode")
 	FOnActorKilled OnActorKilled;
+
+	UPROPERTY(BlueprintAssignable, Category = "GameMode")
+	FOnRespawn OnRespawn;
 };

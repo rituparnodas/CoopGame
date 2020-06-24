@@ -140,6 +140,7 @@ void ASGameMode::RestartDeadPlayers()
 		if (PC && PC->GetPawn() == nullptr)
 		{
 			RestartPlayer(PC);
+			OnRespawn.Broadcast();
 		}
 	}
 }
