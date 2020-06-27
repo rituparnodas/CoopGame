@@ -65,9 +65,6 @@ protected:
 	UPROPERTY(Replicated)
 	class ASWeapon* CurrentWeapon;
 
-	void StartFire();
-	void StopFire();
-
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
 	TSubclassOf<class ASWeapon> StarterWeaponClass;
 
@@ -103,4 +100,10 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual FVector GetPawnViewLocation() const override;
+
+	UFUNCTION(BlueprintCallable, Category = "Player")
+	void StartFire();
+
+	UFUNCTION(BlueprintCallable, Category = "Player")
+	void StopFire();
 };
