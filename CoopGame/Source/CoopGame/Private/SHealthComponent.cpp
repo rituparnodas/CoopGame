@@ -9,6 +9,8 @@ USHealthComponent::USHealthComponent()
 	DefaultHealth = 100.f;
 	bIsDead = false;
 
+	TeamNum = 255;
+
 	SetIsReplicated(true);
 }
 
@@ -37,9 +39,15 @@ void USHealthComponent::BeginPlay()
 	Health = DefaultHealth;
 }
 
-void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
+void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage,
+	const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
 	if (Damage <= 0.f || bIsDead) return;
+
+	if (DamageCauser != DamagedActor && IsFriendly(DamagedActor, DamageCauser))
+	{
+		return;
+	}
 
 	// Update Health Clamped
 	Health = FMath::Clamp(Health - Damage, 0.f, DefaultHealth);
@@ -58,6 +66,18 @@ void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, 
 			GM->OnActorKilled.Broadcast(GetOwner(), DamageCauser, InstigatedBy);
 		}
 	}
+}
+
+bool USHealthComponent::IsFriendly(AActor* ActorA, AActor* ActorB)
+{
+	if (ActorA == nullptr || ActorB == nullptr) return true;
+
+	USHealthComponent* HealthCompA = Cast<USHealthComponent>(ActorA->GetComponentByClass(USHealthComponent::StaticClass()));
+	USHealthComponent* HealthCompB = Cast<USHealthComponent>(ActorB->GetComponentByClass(USHealthComponent::StaticClass()));
+
+	if (HealthCompA == nullptr || HealthCompB == nullptr) return true; // Assume Friendly
+
+	return HealthCompA->TeamNum == HealthCompB->TeamNum;
 }
 
 // Trigger On Clients

@@ -99,7 +99,7 @@ void ASWeapon::Fire()
 				ShotDirection,
 				Hit,
 				MyOwner->GetInstigatorController(),
-				this,
+				MyOwner,
 				DamageType);
 
 			// Overriding TracerEndPoint

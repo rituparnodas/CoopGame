@@ -25,6 +25,13 @@ public:
 
 	float GetHealth() const { return Health; };
 
+	// Friendly Fire Check
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "HealthComponent")
+	uint8 TeamNum;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HealthComponent")
+	static bool IsFriendly(AActor* ActorA, AActor* ActorB);
+
 protected:
 
 	virtual void BeginPlay() override;
