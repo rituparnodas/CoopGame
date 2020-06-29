@@ -46,6 +46,10 @@ protected:
 		void HandleTakeDamage(USHealthComponent* HealthComponent, float Health, float HealthDelta,
 			const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
 
+	FTimerHandle TimerHandle_RefreshPath;
+
+	void RefreshPath();
+
 	// Dynamic Material To Pulse On Damage
 	UMaterialInstanceDynamic* MatInst;
 
